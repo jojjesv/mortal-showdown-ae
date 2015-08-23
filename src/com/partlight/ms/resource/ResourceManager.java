@@ -90,6 +90,7 @@ public final class ResourceManager {
 		public static final String	S_CHASE_ICON			= "graphics/hud/s_chase_icon.png";
 		public static final String	S_COLOR_SPLASH			= "graphics/icons/s_color_splash.png";
 		public static final String	S_COL_MAP				= "graphics/collectibles/s_col_map.png";
+		public static final String	S_ICON_JAMMER			= "graphics/icons/store/s_icon_jammer.png";
 		public static final String	S_DIALOG01				= "graphics/hud/dialog_box/s_dialog01.png";
 		public static final String	S_DIALOG02				= "graphics/hud/dialog_box/s_dialog02.png";
 		public static final String	S_DIALOG_BTN			= "graphics/hud/dialog_box/s_dialog_btn.png";
@@ -262,6 +263,7 @@ public final class ResourceManager {
 		public static TiledTextureRegion	region_icon_glitch_clip;
 		public static TiledTextureRegion	region_icon_laser;
 		public static TiledTextureRegion	region_icon_wardrobe;
+		public static TiledTextureRegion	region_icon_jammer;
 
 	}
 
@@ -335,6 +337,7 @@ public final class ResourceManager {
 	public static BitmapTexture			btHudBoundsIndicator;
 	public static BitmapTexture			btHudLoginStates01;
 	public static BitmapTexture			btIconCredits;
+	public static BitmapTexture			btIconJammer;
 	public static BitmapTexture			btIconDye;
 	public static BitmapTexture			btIconDyePack;
 	public static BitmapTexture			btIconGlitchClip;

@@ -75,7 +75,6 @@ public class Button extends BaseScreenComponent {
 			@Override
 			public void setText(CharSequence pText) throws OutOfCharactersException {
 				super.setText(pText);
-				super.onUpdateVertices();
 			}
 		};
 		this.attachChild(this.stDescription);
@@ -140,9 +139,16 @@ public class Button extends BaseScreenComponent {
 	public void setDescription(String text) {
 		this.emptyDescription = text.contentEquals("");
 
-		if (this.stDescription == null)
-			this.createDescription(text);
-		this.stDescription.setText(text);
+		if (!this.emptyDescription) {
+			if (this.stDescription != null && text.length() > this.stDescription.getText().length()) {
+				this.stDescription.detachSelf();
+				this.stDescription.dispose();
+				this.stDescription = null;
+			}
+			if (this.stDescription == null)
+				this.createDescription(text);
+			this.stDescription.setText(text);
+		}
 		this.updateAlignment();
 	}
 

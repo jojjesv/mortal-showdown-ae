@@ -200,8 +200,6 @@ public abstract class DialogScene extends Scene {
 		this.hdDialog.runOnHide(new Runnable() {
 			@Override
 			public void run() {
-				DialogScene.this.onDialogClosed();
-
 				if (DialogScene.this.dbDialogAccept != null) {
 					DialogScene.this.dbDialogAccept.detachSelf();
 					DialogScene.this.dbDialogDecline.detachSelf();
@@ -218,6 +216,8 @@ public abstract class DialogScene extends Scene {
 				} catch (final NullPointerException ex) {
 
 				}
+				
+				DialogScene.this.onDialogClosed();
 			}
 		});
 

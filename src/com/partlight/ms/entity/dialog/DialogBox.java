@@ -16,6 +16,7 @@ import org.andengine.util.color.Color;
 import org.andengine.util.modifier.IModifier;
 import org.andengine.util.modifier.IModifier.IModifierListener;
 
+import com.partlight.ms.activity.ad.AdUtils;
 import com.partlight.ms.entity.ShadowedText;
 import com.partlight.ms.resource.EnvironmentVars;
 import com.partlight.ms.resource.ResourceManager;
@@ -78,6 +79,7 @@ public class DialogBox {
 			@Override
 			public void onAttached() {
 				EntityUtils.alignEntity(this, this.getWidth(), this.getHeight(), HorizontalAlign.LEFT, VerticalAlign.BOTTOM, 4, 4);
+				AdUtils.pushEntities(this);
 			}
 		};
 		FOOTER.setScale(1.75f);

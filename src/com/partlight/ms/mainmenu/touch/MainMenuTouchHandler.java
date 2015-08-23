@@ -17,6 +17,8 @@ public class MainMenuTouchHandler extends ModifierSwipeHandler {
 
 	private final MainMenuScene mmsContext;
 
+	private boolean hasDownInMain;
+
 	public MainMenuTouchHandler(MainMenuScene context) {
 		super(context, 128f, SwipeDirections.LEFT, SwipeDirections.RIGHT, SwipeDirections.DOWN, SwipeDirections.UP);
 		this.mmsContext = context;
@@ -25,6 +27,12 @@ public class MainMenuTouchHandler extends ModifierSwipeHandler {
 
 	protected boolean allowTouch() {
 		return true;
+	}
+	
+	@Override
+	protected void onSwipingStarted() {
+		super.onSwipingStarted();
+		this.hasDownInMain = false;
 	}
 
 	@Override
@@ -41,11 +49,16 @@ public class MainMenuTouchHandler extends ModifierSwipeHandler {
 		if (!this.allowTouch())
 			return false;
 
-		if (this.mmsContext.getCurrentSection() == MainMenuScene.SECTION_MAIN)
-			if (pSceneTouchEvent.isActionUp() && !this.isSwiping()) {
+		if (this.mmsContext.getCurrentSection() == MainMenuScene.SECTION_MAIN) {
+			if (pSceneTouchEvent.isActionDown()){
+				this.hasDownInMain = true;
+			}
+			if (pSceneTouchEvent.isActionUp() && this.hasDownInMain && !this.isSwiping()) {
 				this.mmsContext.preToSession();
 				return true;
 			}
+		} else
+			this.hasDownInMain = false;
 
 		if (this.mmsContext.getCurrentSection() == MainMenuScene.SECTION_OPTIONS) {
 

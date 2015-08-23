@@ -21,7 +21,7 @@ public class ScrollContainer extends AlphaFriendlyEntity {
 	private int				maximumY;
 	private final float		scrollDeadZone;
 	private boolean			isScrolling;
-	private boolean			touchActionHasBeenDown;
+	protected boolean		touchActionHasBeenDown;
 	private MoveYModifier	modReleaseAcceleration;
 
 	public ScrollContainer(float deadzone) {

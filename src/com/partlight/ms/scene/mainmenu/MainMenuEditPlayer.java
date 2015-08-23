@@ -1,5 +1,6 @@
 package com.partlight.ms.scene.mainmenu;
 
+import org.andengine.entity.Entity;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.input.touch.TouchEvent;
@@ -7,7 +8,9 @@ import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.util.color.Color;
 
 import com.partlight.ms.Direction;
+import com.partlight.ms.activity.ad.AdUtils;
 import com.partlight.ms.entity.mainmenu.button.Button;
+import com.partlight.ms.entity.touch.scroll.ScrollContainer;
 import com.partlight.ms.mainmenu.hud.Selector;
 import com.partlight.ms.resource.EnvironmentVars;
 import com.partlight.ms.resource.ResourceManager;
@@ -22,6 +25,8 @@ import com.partlight.ms.session.hud.listener.ComponentAdapter;
 import com.partlight.ms.shader.RadialGradientShaderProgram;
 import com.partlight.ms.util.boundary.Boundary;
 import com.partlight.ms.util.boundary.BoundaryAdapter;
+
+import android.util.Log;
 
 class MainMenuEditPlayer extends SubSection {
 
@@ -55,10 +60,10 @@ class MainMenuEditPlayer extends SubSection {
 	private boolean					isRotatingSkin;
 	private boolean					needsPurchaseConfirmation;
 	private float					rotateCharInitalTouchX;
-
-	protected Selector sCurrent;
-
-	protected boolean purchaseCanceled;
+	private boolean					hasPushedEntities;
+	private ScrollContainer			scLeftSideContainer;
+	protected Selector				sCurrent;
+	protected boolean				purchaseCanceled;
 
 	public MainMenuEditPlayer(MainMenuScene context) {
 		super(context);
@@ -73,10 +78,28 @@ class MainMenuEditPlayer extends SubSection {
 		this.goBack();
 	}
 
+	public void pushEntities() {
+		if (this.hasPushedEntities)
+			return;
+
+		AdUtils.pushEntities(this.getPushedEntities());
+		AdUtils.pushScrollContainer(this.scLeftSideContainer);
+
+		this.hasPushedEntities = true;
+	}
+
+	protected Entity[] getPushedEntities() {
+		return new Entity[] {
+				this.pcsPlayerSkinPreview,
+				this.sPlayerSkinGradient,
+				this.sRotateChar
+		};
+	}
+
 	private Button createButton(int index) {
 
 		final int INDEX = index;
-		final float Y = 32f + Button.BUTTON_HEIGHT * index;
+		final float Y = Button.BUTTON_HEIGHT * index;
 		final Button BUTTON = new Button(48, Y, StrokeTextureRegions.region_stroke_2, null, MainMenuEditPlayer.BUTTON_STRINGS[index + 1]);
 		BUTTON.setComponentListener(new ComponentAdapter() {
 			@Override
@@ -159,10 +182,23 @@ class MainMenuEditPlayer extends SubSection {
 		this.bTorso = this.createButton(2);
 		this.bLegs = this.createButton(3);
 
-		super.afeContainer.attachChild(this.bHair);
-		super.afeContainer.attachChild(this.bSkin);
-		super.afeContainer.attachChild(this.bTorso);
-		super.afeContainer.attachChild(this.bLegs);
+		this.scLeftSideContainer = new ScrollContainer(8) {
+			@Override
+			public boolean onTouchEvent(TouchEvent event) {
+				if (!this.touchActionHasBeenDown && event.getX() > 390)
+					return false;
+				return super.onTouchEvent(event);
+			}
+		};
+		this.scLeftSideContainer.setY(32);
+		this.scLeftSideContainer.setMaxY(this.scLeftSideContainer.getY());
+
+		this.scLeftSideContainer.attachChild(this.bHair);
+		this.scLeftSideContainer.attachChild(this.bSkin);
+		this.scLeftSideContainer.attachChild(this.bTorso);
+		this.scLeftSideContainer.attachChild(this.bLegs);
+
+		super.afeContainer.attachChild(this.scLeftSideContainer);
 	}
 
 	private void initRotateChar() {
@@ -204,6 +240,11 @@ class MainMenuEditPlayer extends SubSection {
 		ResourceManager.btStroke6.load();
 		ResourceManager.btRotateChar.load();
 
+		if (EnvironmentVars.MAIN_CONTEXT.isAdVisible())
+			this.pushEntities();
+
+		this.scLeftSideContainer.onTouchRelease(false);
+
 		this.revalidatePlayerSkinBodyParts();
 	}
 
@@ -218,8 +259,9 @@ class MainMenuEditPlayer extends SubSection {
 
 	@Override
 	public boolean onSceneTouchEvent(Scene scene, TouchEvent touchEvent) {
-		if (super.mmsContext.getDialog() != null && super.mmsContext.getDialog().isShowing())
+		if (super.mmsContext.getDialog() != null && super.mmsContext.getDialog().isShowing()) {
 			return ((DialogScene) super.mmsContext).onSceneTouchEvent(touchEvent);
+		}
 
 		if (this.sCurrent != null && this.sCurrent.isShowing())
 			return this.sCurrent.onSceneTouchEvent(scene, touchEvent);
@@ -231,7 +273,11 @@ class MainMenuEditPlayer extends SubSection {
 
 		this.handleRotateCharTouchEvent(touchEvent);
 
-		return super.onSceneTouchEvent(scene, touchEvent);
+		final boolean scrollContainerEvent = !this.isRotatingSkin && this.scLeftSideContainer.onTouchEvent(touchEvent);
+		if (!scrollContainerEvent)
+			return super.onSceneTouchEvent(scene, touchEvent);
+		else
+			return true;
 	}
 
 	@Override

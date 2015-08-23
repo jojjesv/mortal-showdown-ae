@@ -47,6 +47,7 @@ public final class EnvironmentVars {
 		public static final String	KEY_USE_CHASE_CAMERA			= "useChaseCamera";
 		public static final String	KEY_USE_MUSIC					= "useMusic";
 		public static final String	KEY_USE_SOUND					= "useSound";
+		public static final String	KEY_AD_BLOCK					= "adBlocked";
 	}
 
 	public static final class PreferenceKeysMeta {
@@ -71,6 +72,7 @@ public final class EnvironmentVars {
 
 	public static final class StaticData {
 		public static boolean	dominador_repeatedFire;
+		public static boolean	adblock;
 		public static boolean	sniper_injectionTips;
 		public static boolean[]	glitchClipItems;
 		public static boolean[]	laserSightItems;

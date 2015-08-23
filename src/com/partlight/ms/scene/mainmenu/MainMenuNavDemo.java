@@ -21,6 +21,8 @@ import com.partlight.ms.util.EntityUtils;
 import com.partlight.ms.util.Fade;
 import com.partlight.ms.util.updatehandler.FloatValueModifier;
 
+import android.util.Log;
+
 public class MainMenuNavDemo {
 
 	private final MainMenuScene		mmsContext;
@@ -30,6 +32,8 @@ public class MainMenuNavDemo {
 	private float[]					iconX;
 	private float[]					iconY;
 	private FloatValueModifier[]	fvmSwipeIconsBrightness;
+	private float					textAddX;
+	private float					textAddY;
 
 	private ScaleModifier[] smSwipeIconsModifiers;
 
@@ -181,6 +185,14 @@ public class MainMenuNavDemo {
 		this.mmsContext.fFade.hide();
 	}
 
+	public int getIndex() {
+		return this.navDemoTextIndex;
+	}
+
+	protected void onShowNextText() {
+
+	}
+
 	public boolean onTouchEvent(TouchEvent touchEvent) {
 
 		if (touchEvent.isActionUp() && this.canUserInteract()) {
@@ -226,8 +238,8 @@ public class MainMenuNavDemo {
 				final float WIDTH = FontUtils.measureText(super.getFont(), longestTextLine);
 				final float HEIGHT = (super.getFont().getLineHeight() * LINES.length);
 
-				this.setX((EnvironmentVars.MAIN_CONTEXT.width() - WIDTH) / 2f);
-				this.setY((EnvironmentVars.MAIN_CONTEXT.height() - HEIGHT) / 2f);
+				this.setX((EnvironmentVars.MAIN_CONTEXT.width() - WIDTH) / 2f + MainMenuNavDemo.this.textAddX);
+				this.setY((EnvironmentVars.MAIN_CONTEXT.height() - HEIGHT) / 2f + MainMenuNavDemo.this.textAddY);
 
 				try {
 					this.setScaleCenter(WIDTH / 2f, HEIGHT / 2f);
@@ -314,5 +326,12 @@ public class MainMenuNavDemo {
 						});
 					}
 				});
+
+		this.onShowNextText();
+	}
+
+	public void translateText(float x, float y) {
+		this.textAddX = x;
+		this.textAddY = y;
 	}
 }

@@ -244,7 +244,7 @@ class MainMenuInitializer {
 		this.mmsContext.sSwipeStore.setY(EnvironmentVars.MAIN_CONTEXT.height() - 24f - this.mmsContext.sSwipeStore.getHeight() * 1.5f);
 		this.mmsContext.sSwipeStore.setShaderProgram(TintShaderProgram.getMultipliedInstance());
 		
-		if (EnvironmentVars.MAIN_CONTEXT.isAdLoaded())
+		if (EnvironmentVars.MAIN_CONTEXT.isAdVisible())
 			EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new EntityAdPosition(this.mmsContext.sSwipeStore));
 
 		this.mmsContext.reattachSwipeIcons();
@@ -309,7 +309,7 @@ class MainMenuInitializer {
 
 		EntityUtils.alignEntity(version, version.getWidth(), version.getHeight(), HorizontalAlign.RIGHT, VerticalAlign.BOTTOM, 4, 4);
 
-		if (EnvironmentVars.MAIN_CONTEXT.isAdLoaded())
+		if (EnvironmentVars.MAIN_CONTEXT.isAdVisible())
 			EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new EntityAdPosition(version));
 	}
 }

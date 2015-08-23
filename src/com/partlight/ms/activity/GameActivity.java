@@ -44,6 +44,7 @@ import com.partlight.ms.R;
 import com.partlight.ms.activity.ad.TappxAdListener;
 import com.partlight.ms.activity.task.ConnectionTask;
 import com.partlight.ms.mainmenu.hud.ColorSelectorLibrary;
+import com.partlight.ms.meta.Strings;
 import com.partlight.ms.resource.EnvironmentVars;
 import com.partlight.ms.resource.EnvironmentVars.PreferenceKeys;
 import com.partlight.ms.resource.EnvironmentVars.PreferenceKeysMeta;
@@ -79,6 +80,8 @@ import com.partlight.ms.util.script.VertexShaderScripts;
 import com.tappx.TAPPXAdBanner;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
@@ -88,7 +91,6 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -185,6 +187,8 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 	private PublisherAdView				pavAdView;
 	private int							currentConnectionCode	= -1;
 	private boolean						adLoaded;
+	private int							adHeight;
+	private boolean						hasAdHeight;
 
 	public void addAdListener(TappxAdListener adListener) {
 		this.lTappxAdListeners.add(adListener);
@@ -216,7 +220,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 	}
 
 	private void changeAdVisibility(final int visibility) {
-		if (!GameActivity.USE_TAPPX)
+		if (!GameActivity.USE_TAPPX || ((this.pavAdView == null) ? true : this.pavAdView.getVisibility() == visibility))
 			return;
 		this.runOnUiThread(new Runnable() {
 
@@ -247,7 +251,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 	public int getAdHeight() {
 		if (this.pavAdView == null)
 			return 0;
-		return this.pavAdView.getAdSize().getHeight();
+		return this.adHeight;
 	}
 
 	public BaseAudioEntity[] getAudioRegistered() {
@@ -311,7 +315,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 
 		StaticData.clothDyeAmount = EnvironmentVars.PREFERENCES.getInt(PreferenceKeys.KEY_CLOTH_DYE_AMOUNT, 0);
 
-		StaticData.scrapPartsAmount = EnvironmentVars.PREFERENCES.getInt(PreferenceKeys.KEY_SCRAP_PARTS_AMOUNT, 0);
+		StaticData.scrapPartsAmount = EnvironmentVars.PREFERENCES.getInt(PreferenceKeys.KEY_SCRAP_PARTS_AMOUNT, 0) + 999999;
 
 		StaticData.playerLegsR = EnvironmentVars.PREFERENCES.getFloat(PreferenceKeys.KEY_PLAYER_LEGS_R,
 				ColorSelectorLibrary.COLORS_COMMON[4][0]);
@@ -576,6 +580,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 		StoreTextureRegions.region_rotate_char = TextureRegionFactory.extractFromTexture(ResourceManager.btRotateChar);
 		StoreTextureRegions.region_scrap_parts_icon = TextureRegionFactory.extractFromTexture(ResourceManager.btScrapPartsIcon);
 		StoreTextureRegions.region_selector_background = TextureRegionFactory.extractFromTexture(ResourceManager.btSelectorBackground);
+		StoreTextureRegions.region_icon_jammer = TextureRegionFactory.extractTiledFromTexture(ResourceManager.btIconJammer, 1, 1);
 
 		StrokeTextureRegions.region_stroke_1 = TextureRegionFactory.extractFromTexture(ResourceManager.btStroke1);
 		StrokeTextureRegions.region_stroke_2 = TextureRegionFactory.extractFromTexture(ResourceManager.btStroke2);
@@ -592,7 +597,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 	}
 
 	public boolean isUsingAd() {
-		return GameActivity.USE_TAPPX && this.pavAdView.isShown();
+		return this.pavAdView != null;
 	}
 
 	//
@@ -640,6 +645,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 	@Override
 	public void onAdLoaded() {
 		this.adLoaded = true;
+
 	}
 
 	@Override
@@ -672,14 +678,25 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 
 		this.addAdListener(this);
 
-		if (GameActivity.USE_TAPPX) {
+		final boolean adblock = StaticData.adblock = EnvironmentVars.PREFERENCES.getBoolean(PreferenceKeys.KEY_AD_BLOCK, false);
+		
+		if (GameActivity.USE_TAPPX && !adblock) {
 			GameActivity.this.pavAdView = TAPPXAdBanner.ConfigureAndShowAtBottom(GameActivity.this, GameActivity.this.pavAdView,
-					"/120940746/Pub-5641-Android-7559");
+					Strings.TAPPX_KEY);
 			GameActivity.this.pavAdView.setAdListener(new AdListener() {
 				@Override
 				public void onAdLoaded() {
-					for (final TappxAdListener listener : GameActivity.this.lTappxAdListeners)
-						listener.onAdLoaded();
+					GameActivity.this.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							if (!hasAdHeight) {
+								adHeight = pavAdView.getAdSize().getHeight();
+								hasAdHeight = true;
+							}
+							for (final TappxAdListener listener : GameActivity.this.lTappxAdListeners)
+								listener.onAdLoaded();
+						}
+					});
 				}
 			});
 		}
@@ -905,6 +922,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 		ResourceManager.btCharA02Muzzle = this.getTextureFromAssets(AssetPaths.S_CHAR_A02_MUZZLE);
 		ResourceManager.btCharA03 = this.getTextureFromAssets(AssetPaths.S_CHAR_A03);
 		ResourceManager.btCharA03Muzzle = this.getTextureFromAssets(AssetPaths.S_CHAR_A03_MUZZLE);
+		ResourceManager.btIconJammer = this.getTextureFromAssets(AssetPaths.S_ICON_JAMMER);
 		ResourceManager.btCharA04 = this.getTextureFromAssets(AssetPaths.S_CHAR_A04);
 		ResourceManager.btCharA04Muzzle = this.getTextureFromAssets(AssetPaths.S_CHAR_A04_MUZZLE);
 		ResourceManager.btCharA05 = this.getTextureFromAssets(AssetPaths.S_CHAR_A05);
@@ -1067,6 +1085,14 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 			new ConnectionTask().execute(this.gacGoogleGamesClient);
 	}
 
+	public void restart() {
+		final Intent restartIntent = this.getPackageManager().getLaunchIntentForPackage(this.getPackageName());
+		final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, restartIntent, Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		final AlarmManager alarm = ((AlarmManager) this.getSystemService(Context.ALARM_SERVICE));
+		alarm.set(AlarmManager.RTC, System.currentTimeMillis() + 1, pendingIntent);
+		System.exit(2);
+	}
+
 	@Override
 	protected void onStop() {
 		super.onStop();
@@ -1087,7 +1113,7 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 
 		final float CAMERA_MIN_Y = this.gcCamera.getYMin();
 
-		this.gcCamera.setYMax(CAMERA_MIN_Y + 800 / (float) ASPECT_RATIO);
+		this.gcCamera.setYMax(CAMERA_MIN_Y + 800f / (float) ASPECT_RATIO);
 
 		if (this.onCameraBoundsChanged != null && this.onCameraBoundsChanged.size() > 0)
 			for (int i = this.onCameraBoundsChanged.size() - 1; i > -1; i--)
@@ -1096,11 +1122,13 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 		this.rtScreenRenderer = new RenderTexture(this.getTextureManager(), (int) this.width(), (int) this.height());
 
 		final Scene SCENE = this.getEngine().getScene();
-		for (int i = 0; i < SCENE.getChildCount(); i++) {
-			final IEntity ENTITY = SCENE.getChildByIndex(i);
+		if (SCENE != null) {
+			for (int i = 0; i < SCENE.getChildCount(); i++) {
+				final IEntity ENTITY = SCENE.getChildByIndex(i);
 
-			if (ENTITY instanceof RectangularShape)
-				((RectangularShape) ENTITY).getVertexBufferObject().setDirtyOnHardware();
+				if (ENTITY instanceof RectangularShape)
+					((RectangularShape) ENTITY).getVertexBufferObject().setDirtyOnHardware();
+			}
 		}
 	}
 
@@ -1311,10 +1339,10 @@ public class GameActivity extends SimpleBaseGameActivity implements TappxAdListe
 		return this.useSound;
 	}
 
-	public boolean isAdLoaded() {
+	public boolean isAdVisible() {
 		if (!this.isUsingAd())
 			return false;
-		return this.adLoaded;
+		return this.adLoaded && ((this.pavAdView == null) ? true : this.pavAdView.getVisibility() == View.VISIBLE);
 	}
 
 	/**

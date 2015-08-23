@@ -33,6 +33,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.partlight.ms.activity.GameActivity.GooglePlayConstants;
 import com.partlight.ms.activity.GameActivity.ScreenTextureCallback;
+import com.partlight.ms.activity.ad.AdUtils;
 import com.partlight.ms.entity.ShadowedText;
 import com.partlight.ms.entity.session.gameover.ScrapPartsSplash;
 import com.partlight.ms.entity.touch.swipe.ModifierSwipeHandler;
@@ -487,6 +488,8 @@ public class SessionGameOver implements ScreenTextureCallback, Runnable {
 		xmod.onUpdate(0, this.stSwipeTopLeft);
 
 		this.stSwipeTopLeft.registerEntityModifier(xmod);
+		
+		AdUtils.pushEntities(topLeft, topRight, bottomLeft, bottomRight);
 	}
 
 	protected void showTitle() {

@@ -33,6 +33,7 @@ import org.andengine.util.modifier.ease.EaseSineOut;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.partlight.ms.activity.GameActivity.GooglePlayConstants;
+import com.partlight.ms.activity.ad.AdUtils;
 import com.partlight.ms.activity.ad.TappxAdListener;
 import com.partlight.ms.entity.EntityAdPosition;
 import com.partlight.ms.entity.LoadingSpriteFade;
@@ -83,6 +84,7 @@ import com.partlight.ms.util.updatehandler.FloatValueModifier.OnValueChangeListe
 import android.annotation.SuppressLint;
 import android.opengl.GLES20;
 import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * 
@@ -146,6 +148,7 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 			ResourceManager.btIconDyePack.load();
 			ResourceManager.btIconGlitchClip.load();
 			ResourceManager.btIconLaser.load();
+			ResourceManager.btIconJammer.load();
 			ResourceManager.btIconWardrobe.load();
 			ResourceManager.btStroke1.load();
 			ResourceManager.btOptionsChase.load();
@@ -199,6 +202,7 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 			ResourceManager.btOptionsMusic.unload();
 			ResourceManager.btOptionsSound.unload();
 			ResourceManager.btOptionsToggle.unload();
+			ResourceManager.btIconJammer.unload();
 			ResourceManager.btScrapPartsIcon.unload();
 			ResourceManager.btScrapPartsSmall.unload();
 
@@ -304,11 +308,13 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 			this.hasUsedStartTransition = true;
 
 		this.mmdbsDialogBoxState = MainMenuDialogBoxState.NONE;
-		
+
 		EnvironmentVars.MAIN_CONTEXT.addAdListener(this);
-		
-		if (EnvironmentVars.MAIN_CONTEXT.isAdLoaded())
+
+		if (EnvironmentVars.MAIN_CONTEXT.isAdVisible())
 			this.onAdLoaded();
+
+		EnvironmentVars.MAIN_CONTEXT.showAd();
 	}
 
 	@Override
@@ -376,25 +382,38 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 		this.scStoreScrollContainer.registerEntityModifier(this.mxmStoreTabXModifier);
 	}
 
+	public void checkAdNavDemo() {
+		if (this.mmndNavDemo == null)
+			return;
+
+		if (this.mmndNavDemo.getIndex() == 4)
+			if (EnvironmentVars.MAIN_CONTEXT.isAdVisible())
+				EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						MainMenuScene.this.mmndNavDemo.translateText(0, -EnvironmentVars.MAIN_CONTEXT.getAdHeight());
+					}
+				});
+	}
+
+	public void checkAdOptions() {
+		AdUtils.pushScrollContainer(this.scOptionsScrollContainer);
+	}
+
 	public void checkAdStore() {
-		if (EnvironmentVars.MAIN_CONTEXT.isAdLoaded()) {
-			final ScrollContainer container = this.scStoreScrollContainer;
-			if (container == null)
-				return;
-			EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					container.setMinY(container.getMinY() - EnvironmentVars.MAIN_CONTEXT.getAdHeight());
-				}
-			});
-		}
 	}
 
 	protected void checkNavDemo() {
 		if (this.isNavDemoShowing) {
-			this.mmndNavDemo = new MainMenuNavDemo(this);
+			this.mmndNavDemo = new MainMenuNavDemo(this) {
+				@Override
+				protected void onShowNextText() {
+					MainMenuScene.this.checkAdNavDemo();
+				}
+			};
 			this.mmndNavDemo.showDemo();
 
+			this.fFade.hideInstantly();
 			try {
 				this.attachChild(this.fFade);
 			} catch (final IllegalStateException ex) {
@@ -424,6 +443,13 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 				break;
 			case MainMenuStore.ID_DYE_APPLICATOR:
 				isPurchased = MainMenuScene.canDyeClothes;
+				break;
+			}
+			break;
+		case 2:
+			switch (storeItemId) {
+			case MainMenuStore.ID_ADBLOCK:
+				isPurchased = StaticData.adblock;
 				break;
 			}
 			break;
@@ -640,6 +666,8 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 		this.scOptionsScrollContainer.setMinY(EnvironmentVars.MAIN_CONTEXT.height() - (Button.BUTTON_HEIGHT * this.bOptionsButtons.length));
 		this.cOptionsContainer.attachChild(this.scOptionsScrollContainer);
 
+		this.checkAdOptions();
+
 		this.isOptionsInitialised = true;
 	}
 
@@ -666,7 +694,7 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 		this.stScrapPartLabel = new ShadowedText(X, 0f, ResourceManager.fFontMain, TEXT,
 				EnvironmentVars.MAIN_CONTEXT.getVertexBufferObjectManager());
 
-		this.stScrapPartLabel.setY(16f + (this.sScrapPartIcon.getHeightScaled() - this.stScrapPartLabel.getHeightScaled()) / 2f);
+		this.stScrapPartLabel.setY(16);
 
 		this.stScrapPartLabel.setColor(ColorConstants.SCRAP_PARTS);
 
@@ -678,10 +706,9 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 	}
 
 	private void initSmallCredits() {
-		this.tSmallCredits = new Text(16f, EnvironmentVars.MAIN_CONTEXT.height() - 32f, ResourceManager.fFontMain,
-				MainMenuScene.SMALL_CREDITS, EnvironmentVars.MAIN_CONTEXT.getVertexBufferObjectManager());
+		this.tSmallCredits = new Text(16, 8, ResourceManager.fFontMain, MainMenuScene.SMALL_CREDITS,
+				EnvironmentVars.MAIN_CONTEXT.getVertexBufferObjectManager());
 		this.tSmallCredits.setColor(0.6f, 0.6f, 0.6f);
-		EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new EntityAdPosition(this.tSmallCredits));
 
 		this.tSmallCredits.setScaleCenter(0, 0);
 		this.tSmallCredits.setScale(1.1f);
@@ -801,7 +828,7 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 		this.sbStoreTabs[0][3].setVirtualIconWidth(64f);
 		this.scStoreScrollContainer.setMaxY(this.storeScrollContainerY);
 
-		this.cstStoreTabTitle = new ShadowedText(0f, 64f, ResourceManager.fFontMain, MainMenuStore.getTab(1).tabTitle,
+		this.cstStoreTabTitle = new ShadowedText(0f, 64f, ResourceManager.fFontMain, MainMenuStore.getTab(2).tabTitle,
 				EnvironmentVars.MAIN_CONTEXT.getVertexBufferObjectManager()) {
 			private boolean hasValidatedDraw;
 
@@ -948,7 +975,14 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 	@Override
 	public void onAdLoaded() {
 		this.checkAdStore();
+		this.checkAdOptions();
 		EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new EntityAdPosition(this.stVersion, this.sSwipeStore));
+
+		if (this.mmepDyeClothes != null)
+			this.mmepDyeClothes.pushEntities();
+
+		if (this.mmwWardrobe != null)
+			this.mmwWardrobe.pushEntities();
 	}
 
 	@SuppressLint("NewApi")
@@ -1000,8 +1034,17 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 
 		case NONE:
 			break;
+		case PURCHASE_COLORS_FAILED:
+			break;
+		case RESTART_GAME:
+			EnvironmentVars.MAIN_CONTEXT.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					EnvironmentVars.MAIN_CONTEXT.restart();
+				}
+			});
+			break;
 		}
-		this.mmdbsDialogBoxState = MainMenuDialogBoxState.NONE;
 
 		super.onDialogAccept();
 	}
@@ -1011,9 +1054,21 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 	protected void onDialogClosed() {
 		super.onDialogClosed();
 
+		boolean resetState = true;
+
 		switch (this.mmdbsDialogBoxState) {
 		case PURCHASE_COLORS_FAILED:
 			this.mmepDyeClothes.cancelPurchase();
+			break;
+		case CONFIRM_ITEM_PURCHASE:
+			if (this.currentStoreTabIndex == 2 && this.dialogConsideredIndex == MainMenuStore.ID_ADBLOCK) {
+				this.mmdbsDialogBoxState = MainMenuDialogBoxState.RESTART_GAME;
+				this.showDialog("\nRESTART THE GAME TO APPLY.\nRESTART NOW?\n\n", false);
+				this.addDialogButtons();
+
+				resetState = false;
+			}
+
 			break;
 		}
 
@@ -1022,6 +1077,10 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 			this.dialogConsideredWeaponIndex = -1;
 			break;
 		}
+
+		if (resetState)
+			this.mmdbsDialogBoxState = MainMenuDialogBoxState.NONE;
+
 	}
 
 	@SuppressWarnings("incomplete-switch")
@@ -1555,6 +1614,14 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 				break;
 			}
 			break;
+		case 2:
+			switch (storeItemId) {
+			case MainMenuStore.ID_ADBLOCK:
+				StaticData.adblock = true;
+				EnvironmentVars.PREFERENCES_EDITOR.putBoolean(PreferenceKeys.KEY_AD_BLOCK, true);
+				break;
+			}
+			break;
 		}
 
 		EnvironmentVars.PREFERENCES_EDITOR.commit();
@@ -1626,6 +1693,9 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 					+ (EnvironmentVars.MAIN_CONTEXT.height() - this.storeScrollContainerY));
 		else
 			this.scStoreScrollContainer.setMinY(this.storeScrollContainerY);
+
+		if (this.currentStoreTabIndex != 2)
+			AdUtils.pushScrollContainer(this.scStoreScrollContainer);
 	}
 
 	public void showAchievements() {
@@ -1803,7 +1873,7 @@ public class MainMenuScene extends DialogLevelScene implements OnBackPressedList
 		MainMenuScene.unloadContainerTextures(MainMenuScene.SECTION_STORE);
 
 		ResourceManager.btBgShadow.unload();
-		
+
 		EnvironmentVars.MAIN_CONTEXT.removeAdListener(this);
 
 		EnvironmentVars.MAIN_CONTEXT.unregisterSound(MainMenuScene.backgroundMusic);

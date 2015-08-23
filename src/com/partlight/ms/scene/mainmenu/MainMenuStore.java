@@ -14,10 +14,11 @@ public class MainMenuStore {
 	public static final int	ID_WARDROBE					= 0;
 	public static final int	ID_DYE_APPLICATOR			= 1;
 	public static final int	ID_CLOTH_DYE				= 2;
+	public static final int	ID_ADBLOCK					= 0;
 
 	private static MainMenuStoreTab[]	mmstTabs;
 	public static final String			ITEM_CONFIRMATION	= "PURCHASE FOR %s PARTS?\n\n\n\n ";
-	public static final int				STORE_TABS			= 2;
+	public static final int				STORE_TABS			= 3;
 	public static final int				CLOTH_DYE_PACK		= 5;
 
 	public static final int[]		HAIR_PRICES			= {
@@ -112,6 +113,25 @@ public class MainMenuStore {
 						StoreTextureRegions.region_icon_wardrobe,
 						StoreTextureRegions.region_icon_dye,
 						StoreTextureRegions.region_icon_dye_pack,
+					}
+			);
+			
+			MainMenuStore.mmstTabs[2] = new MainMenuStoreTab(
+					"SERVICES & UTILITIES",
+					new Integer[]{
+						60,
+					},
+					new String[]{
+						"TYPE-A JAMMER",
+					},
+					new String[]{
+						"REMOVE ADS",
+					},
+					new Boolean[]{
+						false,
+					},
+					new ITiledTextureRegion[]{
+						StoreTextureRegions.region_icon_jammer,
 					}
 			);
 			//@formatter:on
