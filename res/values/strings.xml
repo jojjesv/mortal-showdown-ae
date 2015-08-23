@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Mortal Showdown</string>
+    <string name="game_activity_package">com.partlight.ms.engine.GameActivity</string>
+    <string name="title_activity_google_play_sign_in">GooglePlaySignIn</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="toast_video_error">Video playback error - try rebooting your device</string>
+
+</resources>

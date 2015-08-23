@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="left-down" width="15" height="8" tilewidth="32" tileheight="32" nextobjectid="1">
+ <tileset firstgid="1" name="Ground" tilewidth="32" tileheight="32">
+  <image source="graphics/tilemaps/textures/map_dirt.png" width="96" height="32"/>
+ </tileset>
+ <layer name="Ground" width="15" height="8">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAC2NiYGBggmJmHJgRB0bWh0sNIw6ziNEH04tuDy592NyLrh+fXiYi7MbnTmL0ERtW6HqRxYg1A8QGANgVhyHgAQAA
+  </data>
+ </layer>
+</map>
